@@ -434,9 +434,6 @@ GameObject:
   - component: {fileID: 4419274671784554}
   - component: {fileID: 65550728419070768}
   - component: {fileID: 54936164982484646}
-  - component: {fileID: 114374774605792098}
-  - component: {fileID: 114176228333253036}
-  - component: {fileID: 114725457980523372}
   m_Layer: 0
   m_Name: Agent
   m_TagString: agent
@@ -489,89 +486,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!114 &114374774605792098
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1464820575638702}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_BrainParameters:
-    vectorObservationSize: 4
-    numStackedVectorObservations: 1
-    vectorActionSize: 03000000030000000300000002000000
-    vectorActionDescriptions: []
-    vectorActionSpaceType: 0
-  m_Model: {fileID: 11400000, guid: 36ab3e93020504f48858d0856f939685, type: 3}
-  m_InferenceDevice: 0
-  m_BehaviorType: 0
-  m_BehaviorName: FoodCollector
-  m_TeamID: 0
-  m_useChildSensors: 1
---- !u!114 &114176228333253036
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1464820575638702}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c66e6845309d241c78a6d77ee2567928, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  agentParameters:
-    maxStep: 5000
-    resetOnDone: 1
-    onDemandDecision: 0
-    numberOfActionsBetweenDecisions: 5
-  area: {fileID: 1819751139121548}
-  turnSpeed: 300
-  moveSpeed: 2
-  normalMaterial: {fileID: 2100000, guid: c9fa44c2c3f8ce74ca39a3355ea42631, type: 2}
-  badMaterial: {fileID: 2100000, guid: 88b9ae7af2c1748a0a1f63407587a601, type: 2}
-  goodMaterial: {fileID: 2100000, guid: c67450f290f3e4897bc40276a619e78d, type: 2}
-  frozenMaterial: {fileID: 2100000, guid: 66163cf35956a4be08e801b750c26f33, type: 2}
-  myLaser: {fileID: 1081721624670010}
-  contribute: 0
-  useVectorObs: 1
---- !u!114 &114725457980523372
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1464820575638702}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bb6b867a41448888c1cd4f99643ad71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sensorName: RayPerceptionSensor
-  detectableTags:
-  - food
-  - agent
-  - wall
-  - badFood
-  - frozenAgent
-  raysPerDirection: 3
-  maxRayDegrees: 70
-  sphereCastRadius: 0.5
-  rayLength: 50
-  rayLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967291
-  observationStacks: 1
-  rayHitColor: {r: 1, g: 0, b: 0, a: 1}
-  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
-  useWorldPositions: 1
-  startVerticalOffset: 0
-  endVerticalOffset: 0
 --- !u!1 &1638806402294040
 GameObject:
   m_ObjectHideFlags: 0
@@ -911,7 +825,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4688212428263696}
-  - component: {fileID: 114181230191376748}
   m_Layer: 0
   m_Name: FoodCollectorArea
   m_TagString: Untagged
@@ -935,24 +848,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114181230191376748
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1819751139121548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e14a1d4accf634e3fb9b5bc94d023393, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  food: {fileID: 1699568242032636, guid: b59e4a7fd76af471cadd16e90133a084, type: 3}
-  badFood: {fileID: 1853821981215314, guid: 350871b865967466daa1f596193cc22e, type: 3}
-  numFood: 25
-  numBadFood: 25
-  respawnFood: 1
-  range: 45
 --- !u!1 &1904006146885458
 GameObject:
   m_ObjectHideFlags: 0
