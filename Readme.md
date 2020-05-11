@@ -23,6 +23,22 @@
     - [Why are things slow?](#why-are-things-slow)
     - [When should you stop?](#when-should-you-stop)
     - [Multiple training areas](#multiple-training-areas)
+- [Food Collector Example](#food-collector-example)
+  - [Agent Heuristics](#agent-heuristics-1)
+  - [Create an academy](#create-an-academy)
+  - [Agent Initialize](#agent-initialize)
+  - [Agent Action](#agent-action)
+  - [Area](#area)
+  - [Back to the Academy](#back-to-the-academy)
+  - [Make Agent Eat](#make-agent-eat)
+    - [Activate and deactivate states](#activate-and-deactivate-states)
+    - [Paint it blue!](#paint-it-blue)
+    - [Freeze/Unfreeze](#freezeunfreeze)
+    - [Agent Reset](#agent-reset)
+    - [Agent observations](#agent-observations)
+    - [More observations](#more-observations)
+  - [Party](#party)
+  - [Even bigger party](#even-bigger-party)
 - [Reward Signals](#reward-signals)
 - [Config File](#config-file)
 - [Examples](#examples)
@@ -282,13 +298,13 @@ We should also store a reference to the academy, even though we will not use it,
 **Notice.** I will try to have everything as a reference to the current parent position. You can use absolute world references, but by going with local references, things will be much easier if we want to create duplicates of our agent along with its training area/environment. Thats why am storing the parent origin here.
 
 ```cs
-    BasicAcademy_End m_Academy;
+BasicAcademy_End m_Academy;
 
-    public override void InitializeAgent()
-    {
-        m_Academy = FindObjectOfType(typeof(BasicAcademy_End)) as BasicAcademy_End;
-        parentOrigin = gameObject.transform.parent.transform.position;
-    }
+public override void InitializeAgent()
+{
+    m_Academy = FindObjectOfType(typeof(BasicAcademy_End)) as BasicAcademy_End;
+    parentOrigin = gameObject.transform.parent.transform.position;
+}
 ```
 
 #### Agent Reset steps
@@ -302,13 +318,13 @@ We will set the agent to the position of the parent's origin, so it snaps back i
 And we will also move the goals to their place.
 
 ```cs
-    public override void AgentReset()
-    {
-        gameObject.transform.position = parentOrigin;
-        var APos = gameObject.transform.localPosition;
-        smallGoal.transform.localPosition = new Vector3(APos.x + m_SmallGoalPosition, 0f, 0f);
-        largeGoal.transform.localPosition = new Vector3(APos.x + m_LargeGoalPosition, 0f, 0f);
-    }
+public override void AgentReset()
+{
+    gameObject.transform.position = parentOrigin;
+    var APos = gameObject.transform.localPosition;
+    smallGoal.transform.localPosition = new Vector3(APos.x + m_SmallGoalPosition, 0f, 0f);
+    largeGoal.transform.localPosition = new Vector3(APos.x + m_LargeGoalPosition, 0f, 0f);
+}
 ```
 
 #### Agent heuristics
@@ -320,18 +336,18 @@ In this case we want to be able to move the agent to the left or to the right, b
 This method should return an array of floats. In our case this array will include just one element, indicating the key the user pressed lets say to move the agent left or right.
 
 ```cs
-    public override float[] Heuristic ()
+public override float[] Heuristic ()
+{
+    if (Input.GetKey (KeyCode.D))
     {
-        if (Input.GetKey (KeyCode.D))
-        {
-            return new float[] { 2 };
-        }
-        else if (Input.GetKey (KeyCode.A))
-        {
-            return new float[] { 1 };
-        }
-        return new float[] { 0 };
+        return new float[] { 2 };
     }
+    else if (Input.GetKey (KeyCode.A))
+    {
+        return new float[] { 1 };
+    }
+    return new float[] { 0 };
+}
 ```
 
 #### Agent Actions
@@ -343,24 +359,24 @@ We know what to expect as an input, since we decided on that in the previous ste
 All we have to do, is select the values we are expecting our Agent to receive, and guide it to what it should do with those values.
 
 ```cs
-    public override void AgentAction(float[] vectorAction)
+public override void AgentAction(float[] vectorAction)
+{
+    var movement = (int)vectorAction[0];
+
+    var direction = 0;
+
+    switch (movement)
     {
-        var movement = (int)vectorAction[0];
-
-        var direction = 0;
-
-        switch (movement)
-        {
-            case 1:
-                direction = -1;
-                break;
-            case 2:
-                direction = 1;
-                break;
-        }
-
-        gameObject.transform.localPosition += new Vector3(direction, 0f, 0f);
+        case 1:
+            direction = -1;
+            break;
+        case 2:
+            direction = 1;
+            break;
     }
+
+    gameObject.transform.localPosition += new Vector3(direction, 0f, 0f);
+}
 ```
 
 #### Test heuristics
@@ -380,39 +396,39 @@ To deal with those two problems:
 So lets change the `AgentAction` method to look like this instead
 
 ```cs
-    public override void AgentAction(float[] vectorAction)
+public override void AgentAction(float[] vectorAction)
+{
+    var movement = (int)vectorAction[0];
+
+    var direction = 0;
+
+    switch (movement)
     {
-        var movement = (int)vectorAction[0];
-
-        var direction = 0;
-
-        switch (movement)
-        {
-            case 1:
-                direction = -1;
-                break;
-            case 2:
-                direction = 1;
-                break;
-        }
-        var currentPosX = gameObject.transform.localPosition.x;
-        currentPosX += direction;
-
-        if (currentPosX > PlatformHalfLimit) { currentPosX = PlatformHalfLimit; }
-        if (currentPosX < PlatformHalfLimit * -1f) { currentPosX = PlatformHalfLimit * -1f; }
-
-        gameObject.transform.localPosition = new Vector3(currentPosX, 0f, 0f);
-
-        if (currentPosX == m_SmallGoalPosition)
-        {
-            Done();
-        }
-
-        if (currentPosX == m_LargeGoalPosition)
-        {
-            Done();
-        }
+        case 1:
+            direction = -1;
+            break;
+        case 2:
+            direction = 1;
+            break;
     }
+    var currentPosX = gameObject.transform.localPosition.x;
+    currentPosX += direction;
+
+    if (currentPosX > PlatformHalfLimit) { currentPosX = PlatformHalfLimit; }
+    if (currentPosX < PlatformHalfLimit * -1f) { currentPosX = PlatformHalfLimit * -1f; }
+
+    gameObject.transform.localPosition = new Vector3(currentPosX, 0f, 0f);
+
+    if (currentPosX == m_SmallGoalPosition)
+    {
+        Done();
+    }
+
+    if (currentPosX == m_LargeGoalPosition)
+    {
+        Done();
+    }
+}
 ```
 
 **Notice.** In the `Basic Agent_scratch` component, we need to activate `Reset On Done`.
@@ -430,19 +446,19 @@ So we will use the `AddReward` method, to keep giving negative rewards, very sma
 Add the rewards in the `AgentAction` so that it looks like this.
 
 ```cs
-        gameObject.transform.localPosition = new Vector3(currentPosX, 0f, 0f);
-        AddReward(-0.01f);
-        if (currentPosX == m_SmallGoalPosition)
-        {
-            Done();
-            AddReward(0.1f);
-        }
+gameObject.transform.localPosition = new Vector3(currentPosX, 0f, 0f);
+AddReward(-0.01f);
+if (currentPosX == m_SmallGoalPosition)
+{
+    Done();
+    AddReward(0.1f);
+}
 
-        if (currentPosX == m_LargeGoalPosition)
-        {
-            Done();
-            AddReward(1f);
-        }
+if (currentPosX == m_LargeGoalPosition)
+{
+    Done();
+    AddReward(1f);
+}
 ```
 
 #### What about now?
@@ -458,10 +474,10 @@ Observations help develop a better policy.
 In this example an observation can just be the position of the agent.
 
 ```cs
-    public override void CollectObservations()
-    {
-        AddVectorObs(gameObject.transform.localPosition.x);
-    }
+public override void CollectObservations()
+{
+    AddVectorObs(gameObject.transform.localPosition.x);
+}
 ```
 
 #### Setting Behavior Parameters
@@ -497,6 +513,578 @@ Make sure your `Behavior Type` is set to Default and your `Decision Interval` se
 Now duplicate the whole prefab `Basic_Scratch` multiple times around the scene, in a grid like fashion.
 
 And start your training again from python. They are all participating!!
+
+## Food Collector Example
+
+### Agent Heuristics
+
+Lets start from here, how do we want to control the agent?
+W - forward, S - backward, A - turn left, D - Turn Right and Space - Shoot Laser and slow down.
+
+Create `FoodCollectorAgent_End` script. Add `Using MlAgents;`, inherit `Agent` instead of `Monobehaviour` and lets start with heuristics for this agent.
+
+We have three actions, first one with three options, forward/backward/stand still, second one rotate left/right/stand still and lastly shoot laser pointer with two options on/off.
+
+```cs
+public override float[] Heuristic()
+{
+    var action = new float[3];
+    if (Input.GetKey(KeyCode.D))
+    {
+        action[1] = 2f;
+    }
+    if (Input.GetKey(KeyCode.W))
+    {
+        action[0] = 1f;
+    }
+    if (Input.GetKey(KeyCode.A))
+    {
+        action[1] = 1f;
+    }
+    if (Input.GetKey(KeyCode.S))
+    {
+        action[0] = 2f;
+    }
+    action[2] = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
+    return action;
+}
+```
+
+We can also now go to `Behavior Parameters` components, and set `Space Type` to Discrete. `Branch Sizes` to 3, the first two will be of size 3 and the last one of size 2.
+
+### Create an academy
+
+Create an empty go called Academy, and a script called `FoodCollectorAcademy_End`.
+
+For now we will leave it empty.
+
+```cs
+using MLAgents;
+
+public class FoodCollectorAcademy_End : Academy
+{
+
+}
+```
+
+### Agent Initialize
+
+```cs
+FoodCollectorAcademy_End m_MyAcademy;
+// to store the rigid body component attached on the agent
+Rigidbody m_AgentRb;
+
+public override void InitializeAgent()
+{
+    // we will store here the agents's rigid body component
+    m_AgentRb = GetComponent<Rigidbody>();
+    m_MyAcademy = FindObjectOfType <FoodCollectorAcademy_End> ();
+}
+```
+
+### Agent Action
+
+Based on those inputs what should the agent do?
+
+```cs
+// Whether to shoot laser or not
+bool m_Shoot;
+
+// Speed of agent rotation.
+public float turnSpeed = 300;
+// Speed of agent movement.
+public float moveSpeed = 2;
+
+float m_LaserLength = 1.0f;
+
+// Game objects I should be aware of
+public GameObject myLaser;
+
+public override void AgentAction(float[] vectorAction)
+{
+    MoveAgent(vectorAction);
+}
+public void MoveAgent(float[] act)
+{
+    // Zero things out so if no command
+    // The agent won't move or rotate
+    var dirToGo = Vector3.zero;
+    var rotateDir = Vector3.zero;
+
+    m_Shoot = false;
+    var shootCommand = false;
+
+    // Get data from action array
+    var forwardAxis = (int)act[0];
+    var rotateAxis = (int)act[1];
+    var shootAxis = (int)act[2];
+
+    switch (forwardAxis)
+    {
+        case 1:
+            dirToGo = transform.forward;
+            break;
+        case 2:
+            dirToGo = -transform.forward;
+            break;
+    }
+
+    switch (rotateAxis)
+    {
+        case 1:
+            rotateDir = -transform.up;
+            break;
+        case 2:
+            rotateDir = transform.up;
+            break;
+    }
+    switch (shootAxis)
+    {
+        case 1:
+            shootCommand = true;
+            break;
+    }
+    if (shootCommand)
+    {
+        m_Shoot = true;
+        dirToGo *= 0.5f;
+        m_AgentRb.velocity *= 0.75f;
+    }
+    m_AgentRb.AddForce(dirToGo * moveSpeed, ForceMode.VelocityChange);
+    transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
+
+    // slow it down
+    if (m_AgentRb.velocity.magnitude > 5f)
+    {
+        m_AgentRb.velocity *= 0.95f;
+    }
+
+    if (m_Shoot)
+    {
+        var myTransform = transform;
+        myLaser.transform.localScale = new Vector3(1f, 1f, m_LaserLength);
+    }
+    else
+    {
+        myLaser.transform.localScale = new Vector3(0f, 0f, 0f);
+    }
+```
+
+If you press play now your agent should be moving around.
+
+**Notice** Since the `wallOuter` go under `Court` go has a mesh collider, and our `Agent` has a `Rigid body` component with `Collison` detection set to Discrete and Constraints/FreezeRotation in X, Y and Z activated, and a `Box collider` it will stop in place once it hits it.
+
+### Area
+
+We need to create something different this time, that we didn't do in the previous example.
+
+A training area, imagine it like a classroom. It will take care of randomizing the food overtime a new session of training is started.
+
+Create `FoodCollectorArea_End`, it will inherit from `Area` in `MLAgents` instead of Monobehaviour. And add it to `FoodCollectorArea` go.
+
+Our area will need to know how represent bad food and how to represent bad food.
+
+```cs
+using MLAgents;
+
+public class FoodCollectorArea_End : Area
+{
+    public GameObject food;
+    public GameObject badFood;
+}
+```
+
+You will notice in `/Prefabs` we have a `BadFood` and a `Food` Prefab, they are just spheres with a `Rigid Body` component on and different colors.
+
+**Notice** another very important thing, each of them has a different tag. We will use the tags to know what type of object, in our game scenario, has an agent hit. The tags for each were added manually in Unity Editor, you can select a go or a prefab, and set a tag.
+
+Reference each into the Area component we just created.
+We will need some parameter to tell us where to place the food.
+
+```cs
+public int numFood = 25;
+public int numBadFood = 25;
+public bool respawnFood = true;
+// this is the range where food will be spawned
+// the court is 100 in width
+// so we will generate food between -45 and 45
+public float range = 45;
+```
+
+We will create a function that will add the food game objects
+
+```cs
+void CreateFood(int num, GameObject type)
+{
+    for (int i = 0; i < num; i++)
+    {
+        GameObject f = Instantiate(type, new Vector3(Random.Range(-range, range), 1f,
+            Random.Range(-range, range)) + transform.position,
+            Quaternion.Euler(Vector3.zero));
+    }
+}
+```
+
+And a function that will get called from our academy, once a session runs out of time, and we need to setup for a new session.
+
+This function will move agents inside the classroom to random start positions, and take care of creating the food and the bad food.
+
+```cs
+public void ResetFoodArea(GameObject[] agents)
+{
+    foreach (GameObject agent in agents)
+    {
+        // Find the agents that are part of this area/"classroom"
+        if (agent.transform.parent == gameObject.transform)
+        {
+            agent.transform.position = new Vector3(Random.Range(-range, range), 2f,
+                Random.Range(-range, range))
+                + transform.position; // So that its relative to the current area's position
+            agent.transform.rotation = Quaternion.Euler(new Vector3(0f, Random.Range(0, 360)));
+        }
+    }
+
+    CreateFood(numFood, food);
+    CreateFood(numBadFood, badFood);
+}
+```
+
+If you noticed, we did not do anything with the `public bool respawnFood = true;` field we created. This should control if food is eaten, whether it should respawn somewhere else or no.
+
+This is a piece of logic that better be on the food itself.
+
+So we will create a `FoodLogic_End` script.
+
+The food object will be aware of the Area that created it, so that if its supposed to respawn it would do so within its boundaries. Notice again the use of `myArea.transform.position` so the values generate would be relative to the Area's position in the world.
+
+```cs
+public bool respawn;
+
+public FoodCollectorArea_End myArea;
+// Start is called before the first frame update
+public void OnEaten()
+{
+    if (respawn)
+    {
+        transform.position = new Vector3(Random.Range(-myArea.range, myArea.range),
+            3f,
+            Random.Range(-myArea.range, myArea.range)) + myArea.transform.position;
+    }
+    else
+    {
+        Destroy(gameObject);
+    }
+}
+```
+
+We will add this Component to the `Food` and `BadFood` prefabs.
+
+We also want the Area to pass to the food it creates whether it should be respawned on being eaten or not.
+
+So back to the `CreateFood` method in the `FoodCollectorArea_End` component, we will add those two lines inside the for loop.
+This will set the respawn property inside the food Go to the current respawn settings in the area component. And will also make sure that the food object knows that "this" is the Area that created it.
+
+```cs
+f.GetComponent<FoodLogic_End>().respawn = respawnFood;
+f.GetComponent<FoodLogic_End>().myArea = this;
+```
+
+Two things should be unclear now, who is calling `OnEaten`? And also where do we call `ResetFoodArea` from?
+
+### Back to the Academy
+
+For the second question, lets go back to our academy.
+
+We will edit it to look like this
+
+```cs
+public class FoodCollectorAcademy_End : Academy
+{
+    public override void AcademyReset()
+    {
+        // Claer all food objects
+        ClearObjects(GameObject.FindGameObjectsWithTag("food"));
+        ClearObjects(GameObject.FindGameObjectsWithTag("badFood"));
+        // Find all agents in the scene
+        // notice if we didn't set them to "Agent" Tag
+        // we will not be able to find them this way
+        // There are other ways of doing this but finiding with tag is faster
+        var agents = GameObject.FindGameObjectsWithTag("agent");
+        // This will then do the same for all Areas
+        var listArea = FindObjectsOfType<FoodCollectorArea_End>();
+        // And feed each of them all the avaliable Agents
+        // So that the area can reset its own agents' positions
+        foreach (var fa in listArea)
+        {
+            fa.ResetFoodArea(agents);
+        }
+    }
+
+    void ClearObjects(GameObject[] objects)
+    {
+        foreach (var food in objects)
+        {
+            Destroy(food);
+        }
+    }
+}
+```
+
+Now if you play, you will find food appearing, and when the agent hits the food, food moves away.
+
+So we need to make the Agent eat the food, which brings us back to the question, who is calling `OnEaten`?
+
+### Make Agent Eat
+
+In unity, a GO with Rigid Body component can use `OnCollisionEnter` method. Read more about it [here](https://docs.unity3d.com/ScriptReference/Collider.OnCollisionEnter.html).
+
+Since we already added a rigid body component to our Agent, we just need to go and define the logic of what should happen, once the agent collides with something.
+
+We need to define what will happen if it collides with `Food` or `BadFood`, and also this is where it would make sense to set the rewards.
+
+**Notice.** We will know which type of food the Agent hits based on the tags we already assigned the two types of food, if your food prefabs don't have tags this will not work.
+
+We to sum up we need to do couple of things here:
+
+- Figure out which type of food the agent ate.
+- Figure out rewards
+
+So go to `FoodCollectorAgent_End` and add this method, now we can figure out which type of food we hit
+
+```cs
+void OnCollisionEnter(Collision collision)
+{
+    if (collision.gameObject.CompareTag("food"))
+    {
+    }
+    if (collision.gameObject.CompareTag("badFood"))
+    {
+    }
+}
+```
+
+We want to change the Agents color based on the actions its doing, so we will add those properties to the Agent
+
+```cs
+// Materials representing different states
+public Material normalMaterial;
+public Material badMaterial;
+public Material goodMaterial;
+public Material frozenMaterial;
+```
+
+In the starter files, you will find a material for each, if Agent state is normal we will use `AgentBlue` Material. If Agent ate `Food` we will use `Green` material, `badFood` `Red` material, and something we did not mention yet, but agents can shoot agents, like a game of tag, an agent that is shot by another agent will freeze, that will be visualized with `GrayMiddle` material.
+
+Reference the respective materials for each property in the editor after you save.
+
+#### Activate and deactivate states
+
+So for all the states we mentioned we will create a method to activate or deactivate that state. And some properties to keep track whether a state is activated or not and what time that happened. If you look at the methods they are simple and almost do the same thing, change materials based on state that got activated or deactivated, keep track of active and disabled states in a property in our Agent's class and store time.
+
+Add those properties
+
+```cs
+// Agent state tracking
+bool m_Frozen;
+bool m_Poisoned;
+bool m_Satiated;
+
+float m_FrozenTime;
+float m_EffectTime;
+```
+
+Add those methods
+
+```cs
+void Freeze()
+{
+    gameObject.tag = "frozenAgent";
+    m_Frozen = true;
+    m_FrozenTime = Time.time;
+    gameObject.GetComponentInChildren<Renderer>().material = frozenMaterial;
+}
+
+void Unfreeze()
+{
+    m_Frozen = false;
+    gameObject.tag = "agent";
+    gameObject.GetComponentInChildren<Renderer>().material = normalMaterial;
+}
+
+void Poison()
+{
+    m_Poisoned = true;
+    m_EffectTime = Time.time;
+    gameObject.GetComponentInChildren<Renderer>().material = badMaterial;
+}
+
+void Unpoison()
+{
+    m_Poisoned = false;
+    gameObject.GetComponentInChildren<Renderer>().material = normalMaterial;
+}
+
+void Satiate()
+{
+    m_Satiated = true;
+    m_EffectTime = Time.time;
+    gameObject.GetComponentInChildren<Renderer>().material = goodMaterial;
+}
+
+void Unsatiate()
+{
+    m_Satiated = false;
+    gameObject.GetComponentInChildren<Renderer>().material = normalMaterial;
+}
+```
+
+Now that the logic of activating and deactivating different states is there, lets go use it, lets jump back to the `OnCollisionEnter` method.
+
+We should update it to look like that
+
+```cs
+if (collision.gameObject.CompareTag("food"))
+{
+    Satiate();
+    collision.gameObject.GetComponent<FoodLogic_End>().OnEaten();
+    AddReward(1f);
+
+}
+if (collision.gameObject.CompareTag("badFood"))
+{
+    Poison();
+    collision.gameObject.GetComponent<FoodLogic_End>().OnEaten();
+    AddReward(-1f);
+}
+```
+
+Finally we found who is calling `OnEaten`.
+
+Now if you play, you will see food disappearing once you eat it, and appearing somewhere else, if `Respawn Food` was set to true like we did in the `FoodCollectorArea`.
+
+One annoying thing though, the color of the agent doesn't change unless it eats something different than what it ate before! We should have the agent turn to blue back again after eating something.
+
+#### Paint it blue!
+
+So to do that, if you go back to your `MoveAgent` function, we will put some logic here to check how much time has passed since we ate something. So we need to check what time is it now, and if its more than the time we recorded, when a specific state was activated, then we will deactivate that state.
+
+Add this at the very top of your `MoveAgent` method
+
+```cs
+// State tracker
+if (Time.time > m_FrozenTime + 4f && m_Frozen)
+{
+    Unfreeze();
+}
+if (Time.time > m_EffectTime + 0.5f)
+{
+    if (m_Poisoned)
+    {
+        Unpoison();
+    }
+    if (m_Satiated)
+    {
+        Unsatiate();
+    }
+}
+```
+
+Play now to test if this is working, it should! If it didn't start by checking if you saved what we just did or not!
+
+You might have noticed we have the logic for freeze and unfreeze, but we did not use that anywhere!
+
+#### Freeze/Unfreeze
+
+In your `MoveAgent` method, towards the end, update the `m_shoot` if statement to look like this
+
+```cs
+if (m_Shoot)
+{
+    var myTransform = transform;
+    myLaser.transform.localScale = new Vector3(1f, 1f, m_LaserLength);
+    var rayDir = myTransform.forward;
+    RaycastHit hit;
+    if (Physics.SphereCast(transform.position, 2f, rayDir, out hit, 25f))
+    {
+        if (hit.collider.gameObject.CompareTag("agent"))
+        {
+            hit.collider.gameObject.GetComponent<FoodCollectorAgent_End>().Freeze();
+        }
+    }
+}
+```
+
+Basically what we are doing is, if the agent shoots laser, check if the laser is shot in a direction that would hit another agent, if so, freeze that hit agent.
+
+Two things we are missing now, what observations is our agent collecting from the environment, and what happens when our agent resets?
+
+#### Agent Reset
+
+Every time the agent resets, we want to move it to a new random position within the classroom/Area, so we need to be aware of our area.
+
+Add a field to store the Area at the top of your Agent class, each agent, will reference its parent are, once you save, drag the `FoodCollectorArea` to the Area property that will appear in the component.
+
+```cs
+public GameObject area;
+FoodCollectorArea_End m_MyArea;
+```
+
+So now in our `InitializeAgent` method, we can add this line
+
+```cs
+m_MyArea = area.GetComponent<FoodCollectorArea_End>();
+```
+
+And now lets override the `AgentReset` method, we will make sure all states are deactivated, and move the agent to a random position with a random rotation within the area.
+
+```cs
+public override void AgentReset()
+{
+    Unfreeze();
+    Unpoison();
+    Unsatiate();
+    m_Shoot = false;
+    m_AgentRb.velocity = Vector3.zero;
+    myLaser.transform.localScale = new Vector3(0f, 0f, 0f);
+    transform.position = new Vector3(Random.Range(-m_MyArea.range, m_MyArea.range),
+        2f, Random.Range(-m_MyArea.range, m_MyArea.range))
+        + area.transform.position;
+    transform.rotation = Quaternion.Euler(new Vector3(0f, Random.Range(0, 360)));
+}
+```
+
+#### Agent observations
+
+We will use our current velocity, defined locally to our position. And also whether we are shooting laser or frozen.
+
+```cs
+public override void CollectObservations()
+{
+    var localVelocity = transform.InverseTransformDirection(m_AgentRb.velocity);
+    AddVectorObs(localVelocity.x);
+    AddVectorObs(localVelocity.z);
+    AddVectorObs(System.Convert.ToInt32(m_Frozen));
+    AddVectorObs(System.Convert.ToInt32(m_Shoot));
+}
+```
+
+As you can see we are using 4 observations, so time to go and let the Agent's `Behaviour Parameters` know about that. So our `Vector Observation Space Size` will be 4, and we will set `Stack Vectors` to 1, since we are only interested in the current state of things, we don't want our model to look into the past states.
+
+#### More observations
+
+What we added as observations now is not enough for the agent to learn anything.
+
+There is another way of adding observations in ML-Agents and thats using a `Ray Perception Sensor`. It gives the object more awareness about its surroundings. What it does is, it creates sphere casts, out from the agent position, you define it as if its the agent cone of vision, you define the angle of that cone, how many casts to perform within that angle, and what type of objects you are interested in. You define objects of interest by tags, so you should be using tags on everything you are interested in, which we have been doing i.e food, badFood, agent, frozenAgent and wall.
+
+To read more about this check [here](https://github.com/Unity-Technologies/ml-agents/blob/release-0.13.1/docs/Learning-Environment-Design-Agents.md#raycast-observations).
+
+### Party
+
+Add more agents, now that all the settings are set, just duplicate the agent in the training area and start the training.
+
+### Even bigger party
+
+once you duplicated agents within the area, you can even start duplicating the area. and proceed with the training.
 
 ## Reward Signals
 
